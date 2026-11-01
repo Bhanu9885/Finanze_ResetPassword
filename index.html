@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password - Finanze</title>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.0"></script>
+  <style>
+    body {
+      background-color: #0d121d;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #171f33;
+      padding: 32px;
+      border-radius: 20px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    h2 { color: #0058be; margin-top: 0; text-align: center; }
+    p { color: #8c909f; font-size: 14px; text-align: center; margin-bottom: 24px; }
+    label { font-size: 13px; color: #8c909f; font-weight: bold; display: block; margin-bottom: 6px; }
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #2a3245;
+      background: #101625;
+      color: #fff;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      font-size: 15px;
+    }
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #0058be;
+      border: none;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    button:hover { background: #004596; }
+    .status { margin-top: 15px; font-size: 14px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Finanze</h2>
+    <p>Enter your new password below</p>
+    <div id="form">
+      <label>New Password</label>
+      <input type="password" id="password" placeholder="At least 8 characters">
+      <label>Confirm Password</label>
+      <input type="password" id="passwordAgain" placeholder="Repeat password">
+      <button onclick="handleReset()">Reset Password</button>
+      <div id="status" class="status"></div>
+    </div>
+  </div>
+
+  <script>
+    const client = new Appwrite.Client()
+      .setEndpoint('https://sgp.cloud.appwrite.io/v1')
+      .setProject('6a8e9aa60021ae203c94');
+    const account = new Appwrite.Account(client);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId');
+    const secret = urlParams.get('secret');
+
+    async function handleReset() {
+      const pwd = document.getElementById('password').value;
+      const pwdAgain = document.getElementById('passwordAgain').value;
+      const status = document.getElementById('status');
+
+      if (!pwd || pwd.length < 8) {
+        status.style.color = '#ff4d4f';
+        status.innerText = 'Password must be at least 8 characters.';
+        return;
+      }
+      if (pwd !== pwdAgain) {
+        status.style.color = '#ff4d4f';
+        status.innerText = 'Passwords do not match.';
+        return;
+      }
+      if (!userId || !secret) {
+        status.style.color = '#ff4d4f';
+        status.innerText = 'Invalid or expired recovery link.';
+        return;
+      }
+
+      try {
+        status.style.color = '#8c909f';
+        status.innerText = 'Updating password...';
+        await account.updateRecovery(userId, secret, pwd, pwdAgain);
+        status.style.color = '#10b981';
+        status.innerText = 'Password updated successfully! You can now log in to the Finanze app.';
+      } catch (err) {
+        status.style.color = '#ff4d4f';
+        status.innerText = err.message || 'Failed to update password.';
+      }
+    }
+  </script>
+</body>
+</html>
